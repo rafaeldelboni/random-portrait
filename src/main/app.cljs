@@ -1,26 +1,78 @@
 (ns main.app
-  (:require
-   ["react-dom/client" :as rdom]
-   [helix.core :refer [$]]
-   [helix.dom :as d]
-   [helix.hooks :as hooks]
-   [main.lib :refer [defnc]]))
+  (:require ["react-dom/client" :as rdom]
+            [clojure.pprint :as pprint]
+            [helix.core :refer [$]]
+            [helix.dom :as d]
+            [helix.hooks :as hooks]
+            [lambdaisland.fetch :as fetch]
+            [goog.object :as gobj]
+            [main.lib :refer [defnc]]))
 
-; https://unsplash.com/napi/photos/random?query=portrait
+(defn wire->model
+  [obj]
+  {:id (gobj/get obj "id")
+   :desc (gobj/get obj "alt_description")
+   :img-url (gobj/getValueByKeys obj "urls" "full")
+   :img-src (gobj/getValueByKeys obj "links" "html")
+   :author-name (gobj/getValueByKeys obj "user" "name")
+   :author-src (gobj/getValueByKeys obj "user" "links" "html")})
+
+(defn get-30-random-portraits [set-state]
+  (set-state assoc :upcoming {:loading true :error nil})
+  (-> (fetch/get (str "https://cors-anywhere.herokuapp.com/" ; sorry, just a POC
+                      "https://unsplash.com/napi/photos/random?query=portrait&count=30")
+                 {:accept :json
+                  :content-type :json
+                  :headers {"Access-Control-Allow-Origin" "*"}})
+      (.then (fn [{:keys [body]}]
+               (let [images (map wire->model body)]
+                 (set-state assoc-in [:upcoming :loading] false)
+                 (set-state update-in [:upcoming :list] #(into %2 %1) images))))
+      (.catch (fn [err]
+                (set-state assoc :upcoming {:loading false :error err})))))
+
+(defn set-current [set-state current upcoming-list]
+  (when (> (count upcoming-list) 0)
+    (set-state update-in [:past :list] #(if %2 (into (take 10 %1) [%2]) %1) current)
+    (set-state assoc :current (first upcoming-list))
+    (set-state update-in [:upcoming :list] rest)))
 
 (defnc countdown
   "Countdown component"
   [{:keys [seconds]}]
-  (let [[counter set-counter] (hooks/use-state seconds)]
+  (let [[state set-state] (hooks/use-state {:counter 0
+                                            :current nil
+                                            :past {:list []}
+                                            :upcoming {:error nil
+                                                       :loading false
+                                                       :list []}})
+        {:keys [counter current upcoming]} state
+        upcoming-loading (:loading upcoming)
+        upcoming-list (:list upcoming)]
+
+    (hooks/use-effect
+      [upcoming-list upcoming-loading]
+      (when (and (< (count upcoming-list) 2)
+                 (not upcoming-loading))
+        #_(let [images (take 5 (repeatedly #(rand-int 1000)))]
+          (set-state update-in [:upcoming :list] #(into %2 %1) images))
+        (get-30-random-portraits set-state)))
+
+    (hooks/use-effect
+      [current upcoming-list]
+      (when (nil? current)
+        (set-current set-state current upcoming-list)))
 
     (hooks/use-effect
       [counter]
       (if-not (zero? counter)
-        (js/setTimeout #(set-counter dec) 1000)
-        (set-counter 10)))
+        (js/setTimeout #(set-state update-in [:counter] dec) 1000)
+        (do (set-state assoc :counter seconds)
+            (set-current set-state current upcoming-list))))
 
     (d/div
-     (str counter "s"))))
+     (str counter "s")
+     (d/pre (with-out-str (pprint/pprint state))))))
 
 ;; app
 (defnc app []

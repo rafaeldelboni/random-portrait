@@ -1,6 +1,7 @@
 ;; shadow-cljs configuration
 {:source-paths ["src" "test"]
- :dependencies [[lilactown/helix "0.1.9"]]
+ :dependencies [[lilactown/helix "0.1.10"]
+                [lambdaisland/fetch "1.3.74"]]
  :builds {:app {:target           :browser
                 :devtools         {:http-port 8000
                                    :http-root "public"
