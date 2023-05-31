@@ -5,8 +5,8 @@ _Uses an unofficial Unsplash API via `corsproxy.io` because it's a simple SPA wi
 
 ## Todos
  - [x] Show current author and source links
- - [ ] Refactor into smaller components
- - [ ] Refactor into more pure functions
+ - [x] Refactor into smaller components
+ - [x] Refactor into more pure functions
  - [ ] Write unit tests
  - [ ] Better state handling
  - [ ] Show formated list of past images with links
