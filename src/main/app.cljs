@@ -38,13 +38,15 @@
       (.catch (fn [err]
                 (set-state assoc :upcoming {:loading false :error err})))))
 
-(defn set-current [set-state current upcoming-list]
-  (when (> (count upcoming-list) 0)
-    (set-state update-in [:past :list] #(if %2 (into (take 10 %1) [%2]) %1) current)
-    (set-state assoc :current (first upcoming-list))
-    (set-state update-in [:upcoming :list] rest)
-    (pre-load-image (first upcoming-list))
-    (pre-load-image (second upcoming-list))))
+(defn set-current [set-state {:keys [upcoming current timeout-id]}]
+  (let [upcoming-list (:list upcoming)]
+    (when (> (count upcoming-list) 0)
+      (set-state assoc :timeout-id (js/clearTimeout timeout-id))
+      (set-state update-in [:past :list] #(if %2 (into (take 10 %1) [%2]) %1) current)
+      (set-state assoc :current (first upcoming-list))
+      (set-state update-in [:upcoming :list] rest)
+      (pre-load-image (first upcoming-list))
+      (pre-load-image (second upcoming-list)))))
 
 (defnc photo-switcher
   "Countdown component"
@@ -70,7 +72,7 @@
     (hooks/use-effect
       [current upcoming-list]
       (when (nil? current)
-        (set-current set-state current upcoming-list)))
+        (set-current set-state state)))
 
     (hooks/use-effect
       [pause]
@@ -91,14 +93,14 @@
           (> counter 0) (set-state assoc :timeout-id (js/setTimeout #(set-state update-in [:counter] dec) 1000))
           ; zero
           :else (do (set-state assoc :counter seconds)
-                    (set-current set-state current upcoming-list)))))
+                    (set-current set-state state)))))
 
     (d/div
      (d/div {:className "text-center"}
             (d/div
-             {:className "progress" :style #js {:height "15px"}}
-             (let [progress (- 110 (* (/ counter seconds) 100))]
-               (d/div {:className "progress-bar progress-bar-animated"
+             {:className "progress" :style #js {:height "5px"}}
+             (let [progress (- 100 (* (/ counter seconds) 100))]
+               (d/div {:className "progress-bar progress-bar-animated bg-dark"
                        :role "progressbar"
                        :aria-valuenow (str progress)
                        :aria-valuemin "0"
@@ -114,8 +116,10 @@
      (when debug
        (d/pre
         {:className "pt-4"}
-        (d/code
-         (with-out-str (pprint/pprint (merge state {:upper-state upper-state})))))))))
+        (d/div
+         {:className "bg-light p-3"}
+         (d/code
+          (with-out-str (pprint/pprint (merge state {:upper-state upper-state}))))))))))
 
 ;; app
 (defnc app []
@@ -139,7 +143,7 @@
     (d/div
      {:className "container"}
      (d/header
-      {:className "d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom"}
+      {:className "d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-2"}
       (d/div
        {:className "d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none"}
        (d/span {:className "px-2 fs-4 text-dark"} "Random Portrait"))

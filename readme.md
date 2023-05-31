@@ -1,7 +1,16 @@
 # random-portrait
-Get a random portrait photo from Unsplash every X seconds
+Get a random portrait photo from Unsplash every X seconds.
 
-IN PROGRESS
+_Uses an unofficial Unsplash API via `corsproxy.io` because it's a simple SPA without backend to handle my API keys._
+
+## Todos
+ - [ ] Show current author and source links
+ - [ ] Refactor into smaller components
+ - [ ] Refactor into more pure functions
+ - [ ] Write unit tests
+ - [ ] Better state handling
+ - [ ] Show formated list of past images with links
+ - [ ] Don't let monitor sleep toogle 
 
 ## Commands
 
