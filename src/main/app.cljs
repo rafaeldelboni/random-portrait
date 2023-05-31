@@ -61,7 +61,7 @@
         {:keys [counter current upcoming]} state
         upcoming-loading (:loading upcoming)
         upcoming-list (:list upcoming)
-        {:keys [img-url desc]} current]
+        {:keys [img-url desc author-name author-src img-src]} current]
 
     (hooks/use-effect
       [upcoming-list upcoming-loading]
@@ -96,22 +96,40 @@
                     (set-current set-state state)))))
 
     (d/div
-     (d/div {:className "text-center"}
-            (d/div
-             {:className "progress" :style #js {:height "5px"}}
-             (let [progress (- 100 (* (/ counter seconds) 100))]
-               (d/div {:className "progress-bar progress-bar-animated bg-dark"
-                       :role "progressbar"
-                       :aria-valuenow (str progress)
-                       :aria-valuemin "0"
-                       :aria-valuemax "100"
-                       :style #js {:width (str progress "%")}})))
-            (d/div {:className "pt-3"}
-                   (if current
-                     (d/img {:src img-url :alt desc :className "img-fluid"})
-                     (d/div
-                      {:className "spinner-grow" :role "status"}
-                      (d/span {:className "visually-hidden"} "Loading...")))))
+     (d/div
+      {:className "text-center"}
+      (d/div
+       {:className "progress" :style #js {:height "5px"}}
+       (let [progress (- 100 (* (/ counter seconds) 100))]
+         (d/div {:className "progress-bar progress-bar-animated bg-dark"
+                 :role "progressbar"
+                 :aria-valuenow (str progress)
+                 :aria-valuemin "0"
+                 :aria-valuemax "100"
+                 :style #js {:width (str progress "%")}})))
+
+      (d/div
+       {:className "pt-3"}
+       (if current
+         (d/div
+          (d/img {:src img-url :alt desc :className "img-fluid"})
+          (d/div
+           (d/p
+            {:className "mt-2 text-end"}
+            (d/small
+             "Photo by "
+             (d/a
+              {:className "link-dark"
+               :href author-src}
+              author-name)
+             " on "
+             (d/a
+              {:className "link-dark"
+               :href img-src}
+              "Unsplash")))))
+         (d/div
+          {:className "spinner-grow" :role "status"}
+          (d/span {:className "visually-hidden"} "Loading...")))))
 
      (when debug
        (d/pre
@@ -146,11 +164,11 @@
       {:className "d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-2"}
       (d/div
        {:className "d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none"}
-       (d/span {:className "px-2 fs-4 text-dark"} "Random Portrait"))
+       (d/span {:className "pt-2 px-2 fs-2 display-6 text-dark"} "Random Portrait"))
       (d/div
        {:className "col-md-3 text-end"}
        (d/div
-        {:className "dropdown"}
+        {:className "dropdown px-2 fs-2"}
         (d/button
          {:className "btn btn-outline-dark me-2 dropdown-toggle"
           :data-bs-toggle "dropdown"
@@ -191,7 +209,16 @@
                      :id "debug-switch"
                      :role "switch"
                      :checked debug
-                     :on-change #(set-state assoc :debug (js/Boolean (.. % -target -checked)))})))))))
+                     :on-change #(set-state assoc :debug (js/Boolean (.. % -target -checked)))})))
+
+         (d/div
+          (d/p
+           {:className "mb-0 text-end"}
+           (d/small
+            (d/a
+             {:className "link-dark"
+              :href "https://github.com/rafaeldelboni/random-portrait"}
+             "Source code"))))))))
 
      ($ photo-switcher {:seconds seconds
                         :pause pause

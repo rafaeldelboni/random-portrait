@@ -4,7 +4,7 @@ Get a random portrait photo from Unsplash every X seconds.
 _Uses an unofficial Unsplash API via `corsproxy.io` because it's a simple SPA without backend to handle my API keys._
 
 ## Todos
- - [ ] Show current author and source links
+ - [x] Show current author and source links
  - [ ] Refactor into smaller components
  - [ ] Refactor into more pure functions
  - [ ] Write unit tests
